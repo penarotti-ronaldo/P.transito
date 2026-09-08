@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulado Interativo – Legislação de Trânsito</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            background-color: #fcf3e0;
+            /* Fundo zebrado suave – listras horizontais em tons amarelo e cinza */
+            background-image: repeating-linear-gradient(0deg,
+                    #fcf3e0 0px,
+                    #fcf3e0 48px,
+                    #e8dcc8 48px,
+                    #e8dcc8 96px);
+            background-size: 100% 96px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            max-width: 960px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 32px;
+            padding: 2rem 2rem 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 215, 140, 0.3);
+        }
+
+        /* ===== CABEÇALHO ===== */
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 3px dashed #d4b48c;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #3d2b1a;
+            letter-spacing: -0.5px;
+        }
+
+        header h1 small {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #6b4f34;
+            display: block;
+            margin-top: 6px;
+        }
+
+        header .stats {
+            margin-top: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #3d2b1a;
+            background: #f5ede2;
+            display: inline-block;
+            padding: 0.4rem 2rem;
+            border-radius: 40px;
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        header .stats span {
+            font-weight: 700;
+            color: #8b5a2b;
+        }
+
+        /* ===== QUESTÃO ===== */
+        .questao {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 1.6rem 1.8rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid #f0e4d6;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .questao.correta {
+            border-left: 8px solid #2e7d32;
+            background: #f6faf5;
+        }
+
+        .questao.errada {
+            border-left: 8px solid #c62828;
+            background: #fdf6f5;
+        }
+
+        .questao .enunciado {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #2c1f13;
+            margin-bottom: 1.2rem;
+            line-height: 1.5;
+        }
+
+        .questao .enunciado .qid {
+            display: inline-block;
+            background: #d4b48c;
+            color: #2c1f13;
+            font-weight: 700;
+            font-size: 0.8rem;
+            padding: 0.1rem 0.8rem;
+            border-radius: 30px;
+            margin-right: 8px;
+        }
+
+        /* Opções */
+        .opcoes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem 2rem;
+            margin: 0.8rem 0 1.2rem;
+        }
+
+        .opcoes label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.98rem;
+            color: #2c1f13;
+            cursor: pointer;
+            padding: 0.3rem 0.6rem;
+            border-radius: 8px;
+            transition: background 0.15s;
+        }
+
+        .opcoes label:hover {
+            background: #f5ede2;
+        }
+
+        .opcoes input[type="radio"] {
+            accent-color: #8b5a2b;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .btn-verificar {
+            background: #8b5a2b;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1.8rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 2px 6px rgba(139, 90, 43, 0.3);
+            margin-top: 0.2rem;
+        }
+
+        .btn-verificar:hover {
+            background: #6f471f;
+        }
+
+        .btn-verificar:active {
+            transform: scale(0.96);
+        }
+
+        .btn-verificar:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Feedback */
+        .feedback {
+            margin-top: 1rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: none;
+            align-items: flex-start;
+            gap: 10px;
+            background: #f5ede2;
+            flex-direction: column;
+        }
+
+        .feedback.mostrar {
+            display: flex;
+        }
+
+        .feedback.acerto {
+            background: #e8f5e9;
+            color: #1e4a2b;
+            border: 1px solid #a5d6a7;
+        }
+
+        .feedback.erro {
+            background: #fce4ec;
+            color: #7f2a2a;
+            border: 1px solid #ef9a9a;
+        }
+
+        .feedback .icone {
+            font-size: 1.4rem;
+            margin-right: 6px;
+        }
+
+        .feedback .resposta-correta {
+            font-weight: 700;
+            color: #2c1f13;
+            background: #fff3e0;
+            padding: 0.1rem 0.8rem;
+            border-radius: 30px;
+            margin-left: 4px;
+        }
+
+        .feedback .explicacao {
+            font-weight: 400;
+            font-size: 0.9rem;
+            color: #2c1f13;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            margin-top: 4px;
+            width: 100%;
+            border-left: 3px solid #8b5a2b;
+        }
+
+        .feedback .linha-superior {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.2rem;
+            }
+            header h1 {
+                font-size: 1.6rem;
+            }
+            .questao {
+                padding: 1.2rem;
+            }
+            .opcoes {
+                gap: 0.4rem 1rem;
+            }
+            .opcoes label {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                padding: 0.5in;
+            }
+            .container {
+                box-shadow: none;
+                background: white;
+                backdrop-filter: none;
+            }
+            .btn-verificar {
+                display: none;
+            }
+            .feedback {
+                border: 1px solid #ccc;
+                background: #f9f9f9 !important;
+            }
+            .questao.correta,
+            .questao.errada {
+                border-left: 4px solid #999;
+                background: white !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <header>
+            <h1>
+                🚦 Simulado de Legislação de Trânsito
+                <small>Condução de Veículos Oficiais • Sinistros • Embriaguez</small>
+            </h1>
+            <div class="stats">
+                ✅ Acertos: <span id="contador-acertos">0</span> &nbsp;|&nbsp; 📝 Respondidas: <span id="contador-respondidas">0</span> / 30
+            </div>
+        </header>
+
+        <div id="questoes-container"></div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  DADOS DAS QUESTÕES (extraídos do arquivo original)
+        // ============================================================
+
+        const questoesData = [{
+            id: 1,
+            tipo: 'vf',
+            pergunta: 'Em caso de acidente de trânsito sem vítimas envolvendo veículo oficial, o condutor deve manter o veículo exatamente no local da colisão até a chegada da autoridade de trânsito, sendo proibido movê-lo sob qualquer hipótese, mesmo que esteja causando congestionamento grave.',
+            resposta: 'F',
+            explicacao: 'Art. 178 do CTB. Em acidente sem vítima, a permanência indevida dos veículos na via interrompendo o tráfego é infração média. O condutor deve fotografar/registrar e desobstruir a via imediatamente.'
+        }, {
+            id: 2,
+            tipo: 'vf',
+            pergunta: 'O condutor de veículo oficial que, em caso de acidente de trânsito com vítima, prestar pronto e integral socorro àquela não poderá ser preso em flagrante delito e nem se lhe exigirá fiança nos termos do Código de Trânsito Brasileiro.',
+            resposta: 'V',
+            explicacao: 'Art. 301 do CTB. Ao condutor de veículo que, no caso de acidente de trânsito de que resulte vítima, prestar pronto e integral socorro àquela, não se imporá a prisão em flagrante, nem se exigirá fiança.'
+        }, {
+            id: 3,
+            tipo: 'vf',
+            pergunta: 'A recusa do condutor de veículo automotor a submeter-se a teste de etilômetro, exame clínico ou perícia para certificar influência de álcool insenta-o de sanções administrativas se não houver demonstração inequívoca de sinais visíveis de embriaguez.',
+            resposta: 'F',
+            explicacao: 'Art. 165-A do CTB. A recusa ao teste do etilômetro por si só configura infração gravíssima com as mesmas penalidades administrativas de dirigir embriagado, independente de sinais externos visíveis.'
+        }, {
+            id: 4,
+            tipo: 'vf',
+            pergunta: 'Os veículos oficiais destinados a socorro de incêndio e salvamento, os de polícia e os de fiscalização de trânsito gozam de livre circulação, estacionamento e parada em qualquer circunstância, independente de estarem em serviço de urgência ou com alarme sonoro acionado.',
+            resposta: 'F',
+            explicacao: 'Art. 29, VII do CTB. A prioridade de trânsito e livre circulação/estacionamento dependem do efetivo serviço de urgência/emergência e do acionamento concomitante dos dispositivos de iluminação vermelha e alarme sonoro.'
+        }, {
+            id: 5,
+            tipo: 'vf',
+            pergunta: 'A constatação de consumo de álcool equivalente a 0,34 mg de álcool por litro de ar alveolar expedido no teste do etilômetro (descontada a margem de erro) configura, simultaneamente, infração gravíssima de trânsito e crime de trânsito capitulado no art. 306 do CTB.',
+            resposta: 'V',
+            explicacao: 'Art. 165 e Art. 306 do CTB c/c Resolução CONTRAN. Valor igual ou superior a 0,34 mg/L no etilômetro (já com margem de erro) atinge o patamar criminal do art. 306.'
+        }, {
+            id: 6,
+            tipo: 'vf',
+            pergunta: 'Havendo sinistro de trânsito sem vítimas envolvendo veículo da administração pública, é juridicamente indispensável a confecção de Boletim de Ocorrência (B.O.) e a abertura de procedimento administrativo interno para apuração de eventuais danos ao patrimônio público.',
+            resposta: 'V',
+            explicacao: 'Princípio da Legalidade e Tutela do Patrimônio Público. Veículos oficiais exigem obrigatoriamente formalização do B.O. e procedimento/Sindicância para ressarcimento ao erário e controle de frota.'
+        }, {
+            id: 7,
+            tipo: 'vf',
+            pergunta: 'A penalidade de suspensão do direito de dirigir por conduzir sob a influência de álcool tem duração fixa de 12 (doze) meses, acompanhada de multa multiplicada por 10 (dez) vezes.',
+            resposta: 'V',
+            explicacao: 'Art. 165 do CTB. A penalidade administrativa estipulada expressamente em lei é a suspensão do direito de dirigir pelo prazo de 12 (doze) meses e multa de 10 vezes (R$ 2.934,70).'
+        }, {
+            id: 8,
+            tipo: 'vf',
+            pergunta: 'Em acidente com vítima, se o condutor envolvido julgar que a situação já está sob controle por conta da presença de curiosos, está desobrigado de acionar os serviços públicos de emergência (192 / 193).',
+            resposta: 'F',
+            explicacao: 'Art. 176, I do CTB e Art. 304 do CTB. A presença de terceiros leigos não exime o condutor envolvido de acionar formalmente os serviços de resgate e a polícia.'
+        }, {
+            id: 9,
+            tipo: 'vf',
+            pergunta: 'O servidor público que causar danos patrimoniais a terceiros no comando de veículo oficial responderá perante a administração em ação regressiva apenas se demonstrada a ocorrência de dolo ou culpa (negligência, imprudência ou imperícia).',
+            resposta: 'V',
+            explicacao: 'Art. 37, § 6º da Constituição Federal. O Estado responde objetivamente perante o terceiro lesionado, mas só pode reaver o prejuízo do servidor em ação regressiva mediante prova de dolo ou culpa.'
+        }, {
+            id: 10,
+            tipo: 'vf',
+            pergunta: 'Para efeito de sinalização de emergência em rodovias com velocidade máxima permitida de 100 km/h, a distância mínima para posicionar o triângulo de segurança em dia ensolarado é de 30 metros da traseira do veículo.',
+            resposta: 'F',
+            explicacao: 'Regra prática de segurança e Resoluções de sinalização. Em vias de 100 km/h, a distância de sinalização é de no mínimo 100 metros/passos (pode dobrar em condições adversas). 30m é insuficiente e perigoso.'
+        }, {
+            id: 11,
+            tipo: 'mc',
+            pergunta: 'Ao se envolver em um acidente de trânsito SEM VÍTIMAS, com veículos trafegáveis em uma via de trânsito rápido, a PRIMEIRA providência do condutor para evitar infração e riscos secundários é:',
+            opcoes: [
+                'A) Aguardar a chegada da Polícia Rodoviária ou Perícia mantendo o veículo na faixa de rolamento.',
+                'B) Remover imediatamente os veículos da faixa de rolamento para local seguro ou acostamento.',
+                'C) Abandonar o veículo e dirigir-se a pé à delegacia mais próxima para efetuar o registro.',
+                'D) Exigir que o outro condutor assine uma declaração de culpa antes de mover os veículos.',
+                'E) Ligar os faróis altos e permanecer dentro do carro no meio da pista aguardando guincho.'
+            ],
+            resposta: 'B',
+            explicacao: 'Art. 178 do CTB. A desobstrução da via é mandatória para evitar acidentes secundários quando os carros podem rodar.'
+        }, {
+            id: 12,
+            tipo: 'mc',
+            pergunta: 'Nos termos do art. 178 do CTB, deixar o condutor envolvido em acidente SEM VÍTIMA de adotar providências para remover o veículo do local quando necessária a medida para assegurar a fluidez e segurança do trânsito constitui infração de natureza:',
+            opcoes: [
+                'A) Leve, sujeita apenas a advertência por escrito.',
+                'B) Média, com penalidade de multa.',
+                'C) Grave, com retenção do veículo.',
+                'D) Gravíssima, com suspensão direta da CNH.',
+                'E) Crime de trânsito inafiançável.'
+            ],
+            resposta: 'B',
+            explicacao: 'Art. 178 do CTB define especificamente como infração média.'
+        }, {
+            id: 13,
+            tipo: 'mc',
+            pergunta: 'Em relação ao atendimento a um acidente com VÍTIMAS em rodovia, assinale a sequência correta das ações primárias que o condutor de um veículo oficial deve adotar:',
+            opcoes: [
+                'A) Remover as vítimas das ferragens → Sinalizar o local → Deslocar o veículo oficial → Chamar parentes.',
+                'B) Garantir a própria segurança/sinalizar o local → Acionar resgate especializado (192/193) → Prestar apoio básico sem movimentar indevidamente os feridos → Preservar a cena.',
+                'C) Transportar imediatamente as vítimas no banco traseiro do veículo oficial até o hospital mais próximo sem sinalizar a via.',
+                'D) Aguardar 30 minutos para checar se as vítimas se recuperam sozinhas e só então ligar para a polícia.',
+                'E) Retirar capacetes de motociclistas caídos e dar água para vítimas inconscientes antes de acionar socorro.'
+            ],
+            resposta: 'B',
+            explicacao: 'Sequência de Suporte Básico de Vida e segurança da cena de trânsito (Sinalizar → Acionar 192/193 → Apoiar → Preservar).'
+        }, {
+            id: 14,
+            tipo: 'mc',
+            pergunta: 'O condutor que se recusa a realizar o teste do etilômetro durante fiscalização de rotina de trânsito comete a infração prevista no art. 165-A do CTB. As sanções administrativas aplicadas a esta conduta são:',
+            opcoes: [
+                'A) Multa gravíssima (10x), suspensão do direito de dirigir por 12 meses, recolhimento da CNH e retenção do veículo.',
+                'B) Apenas multa simples de valor grave, mantendo o direito de dirigir sem retenção do veículo.',
+                'C) Cassação imediata e definitiva da CNH sem direito a recurso administrativo.',
+                'D) Prisão em flagrante pelo prazo inafiançável de 1 a 3 anos.',
+                'E) Recolhimento do veículo ao depósito público por 90 dias e perda do cargo público.'
+            ],
+            resposta: 'A',
+            explicacao: 'Art. 165-A do CTB prevê exatamente as sanções administrativas idênticas às do art. 165.'
+        }, {
+            id: 15,
+            tipo: 'mc',
+            pergunta: 'A reincidência na infração de dirigir sob a influência de álcool (art. 165) ou de recusa ao teste (art. 165-A) no período de 12 (doze) meses acarretará:',
+            opcoes: [
+                'A) Redução do valor da multa pela metade em virtude do pagamento antecipado.',
+                'B) Aplicação da multa em dobro e instauração de processo administrativo de cassação da CNH.',
+                'C) Apenas apreensão do veículo pelo período de 30 dias.',
+                'D) Perda automática e irreversível da propriedade do veículo automotor.',
+                'E) Suspensão da CNH pelo prazo improrrogável de 5 anos.'
+            ],
+            resposta: 'B',
+            explicacao: 'Art. 165 e Art. 163 do CTB determinam aplicação da multa em dobro na reincidência em 12 meses e instauração de cassação.'
+        }, {
+            id: 16,
+            tipo: 'mc',
+            pergunta: 'Quando da ocorrência de homicídio culposo na direção de veículo automotor (art. 302 do CTB), a pena é aumentada de 1/3 (um terço) à metade se o agente:',
+            opcoes: [
+                'A) Estiver conduzindo veículo com validade da CNH vencida há menos de 30 dias.',
+                'B) Deixar de prestar socorro, quando possível fazê-lo sem risco pessoal, à vítima do acidente.',
+                'C) Estiver dirigindo em via com pavimentação asfáltica defeituosa.',
+                'D) Não possuir notas fiscais dos equipamentos obrigatórios do veículo.',
+                'E) Não apresentar extintor de incêndio no veículo de passeio.'
+            ],
+            resposta: 'B',
+            explicacao: 'Art. 302, § 1º, III do CTB prevê aumento de pena para omissão de socorro.'
+        }, {
+            id: 17,
+            tipo: 'mc',
+            pergunta: 'Em relação aos veículos oficiais de representação ou de serviço da Administração Pública, é CORRETO afirmar:',
+            opcoes: [
+                'A) Estão isentos do cumprimento das normas gerais de circulação, sinalização de trânsito e limites de velocidade.',
+                'B) Devem ser conduzidos exclusivamente por servidores devidamente habilitados e credenciados pelo órgão competente.',
+                'C) Podem ser utilizados livremente para deslocamentos particulares de familiares do servidor aos finais de semana.',
+                'D) Dispensam o uso de cinto de segurança pelos passageiros do banco traseiro.',
+                'E) Estão dispensados de licenciamento e emplacamento anual junto ao DETRAN.'
+            ],
+            resposta: 'B',
+            explicacao: 'Regra geral de gestão pública de frotas e legislação funcional. Condução restrita a servidores autorizados.'
+        }, {
+            id: 18,
+            tipo: 'mc',
+            pergunta: 'Na hipótese de um condutor de veículo oficial se envolver em sinistro com vítima lesada gravemente, e constatado o estado de embriaguez ao volante (art. 306), além das sanções administrativas e penais, no âmbito disciplinar o servidor estará sujeito a:',
+            opcoes: [
+                'A) Arquivamento automático do caso no órgão após o pagamento da multa de trânsito.',
+                'B) Instauração de Processo Administrativo Disciplinar (PAD), podendo responder por falta grave e demissão/exoneração a bem do serviço público.',
+                'C) Transferência de setor como penalidade máxima aplicável.',
+                'D) Apenas advertência verbal reservada dada pelo chefe imediato.',
+                'E) Isenção total de responsabilidade funcional por gozar de imunidade de frota pública.'
+            ],
+            resposta: 'B',
+            explicacao: 'Estatuto dos Servidores Públicos c/c deveres funcionais. Embriaguez e sinistro com bem público configuram falta grave passível de PAD e demissão.'
+        }, {
+            id: 19,
+            tipo: 'mc',
+            pergunta: 'Em vias não iluminadas, sob neblina ou chuva intensa, ao sinalizar a interrupção da via por acidente de trânsito em uma rodovia com velocidade permitida de 80 km/h, qual o procedimento recomendado em relação ao triângulo de segurança?',
+            opcoes: [
+                'A) Manter exatamente 30 passos longos independente do clima.',
+                'B) Dobrar a contagem da distância, posicionando a sinalização a cerca de 160 passos/metros da ocorrência e ligar o pisca-alerta.',
+                'C) Colocar o triângulo em cima do teto do veículo acidentado para economizar distância.',
+                'D) Dispensar o triângulo e acender galhos secos sobre a pista de rolamento.',
+                'E) Posicionar o triângulo a 5 metros do veículo para evitar que seja atropelado.'
+            ],
+            resposta: 'B',
+            explicacao: 'Manual de Direção Defensiva / CONTRAN. Sob neblina/noite, dobra-se a distância em passos e liga-se pisca-alerta.'
+        }, {
+            id: 20,
+            tipo: 'mc',
+            pergunta: 'Conforme a Lei Seca (Lei nº 12.760/2012 e atualizações do CTB), para a comprovação da alteração da capacidade psicomotora por álcool para fins de CRIME de trânsito, admite-se:',
+            opcoes: [
+                'A) Exclusivamente o teste de sangue e nada mais.',
+                'B) Apenas o teste do etilômetro com laudo assinado por dois médicos peritos criminalistas.',
+                'C) Teste de etilômetro, exame de sangue, vídeo, prova testemunhal, perícia e auto de constatação de sinais de embriaguez.',
+                'D) Confissão verbal escrita com firma reconhecida em cartório.',
+                'E) Declaração de testemunhas da mesma família do condutor apenas.'
+            ],
+            resposta: 'C',
+            explicacao: 'Art. 306, § 2º do CTB (Redação dada pela Lei Seca). Liberdade de meios de prova (vídeo, testemunhas, auto de constatação).'
+        }, {
+            id: 21,
+            tipo: 'mc',
+            pergunta: 'Em caso de colisão entre veículo oficial e veículo particular SEM VÍTIMAS, o formulário/relatório interno de sinistro do órgão público deve ser instruído obrigatoriamente com:',
+            opcoes: [
+                'A) Croqui da cena/fotos, cópia do B.O., dados completos dos condutores/veículos, depoimento de testemunhas e relatório descritivo do servidor.',
+                'B) Apenas um pedido de desculpas assinado pelo servidor.',
+                'C) Orçamento de apenas uma oficina não credenciada sem foto dos danos.',
+                'D) Declaração de que o veículo oficial tem prioridade e por isso o terceiro deve arcar com tudo.',
+                'E) Comprovante de quitação do imposto predial do servidor envolvido.'
+            ],
+            resposta: 'A',
+            explicacao: 'Exigência de instrução probatória para Processo Administrativo de Sinistro e Controle de Patrimônio Público.'
+        }, {
+            id: 22,
+            tipo: 'mc',
+            pergunta: 'Segundo a Constituição Federal (Art. 37, § 6º) e a jurisprudência correlata, a responsabilidade civil do Estado perante terceiros vítimas de acidente causado por veículo oficial é de natureza:',
+            opcoes: [
+                'A) Subjetiva, exigindo que o terceiro comprove dolo do Estado.',
+                'B) Objetiva, fundamentada na teoria do risco administrativo, cabendo direito de regresso contra o servidor culpado.',
+                'C) Inexistente, já que a administração pública não pode ser responsabilizada civilmente.',
+                'D) Solidária ilimitada com a fabricante do automóvel.',
+                'E) Subsidiária exclusiva do chefe do setor de transportes.'
+            ],
+            resposta: 'B',
+            explicacao: 'Art. 37, § 6º da Constituição Federal (Responsabilidade Objetiva da Administração Pública / Ação de Regresso).'
+        }, {
+            id: 23,
+            tipo: 'mc',
+            pergunta: 'Assinale a conduta estritamente PROIBIDA ao condutor ao deparar-se com vítima de acidente de trânsito grave presa nas ferragens:',
+            opcoes: [
+                'A) Sinalizar a via a uma distância segura antes do ponto do acidente.',
+                'B) Tentar puxar ou tracionar abruptamente a vítima de qualquer jeito sem técnica e sem equipamento adequado de desencarceramento.',
+                'C) Ligar para o Corpo de Bombeiros (193) fornecendo a localização e o estado das vítimas.',
+                'D) Desligar a ignição dos veículos envolvidos se houver risco de incêndio e for seguro fazê-lo.',
+                'E) Manter a calma e conversar com a vítima consciente transmitindo segurança até a chegada do resgate.'
+            ],
+            resposta: 'B',
+            explicacao: 'Princípios de Primeiros Socorros. Movimentar vítima presa nas ferragens sem técnica pode causar lesão medular ou morte.'
+        }, {
+            id: 24,
+            tipo: 'mc',
+            pergunta: 'Um veículo de emergência/fiscalização oficial transitando com os batedores acionados e sirene ligada aproxima-se de um cruzamento sinalizado com semáforo no vermelho. Como deve proceder o condutor?',
+            opcoes: [
+                'A) Atravessar em velocidade máxima sem reduzir, pois possui prioridade absoluta incontestável.',
+                'B) Reduzir a velocidade e transpor o sinal vermelho com extrema cautela, certificando-se de que os outros veículos pararam.',
+                'C) Parar o veículo e aguardar o sinal verde abrir obrigatoriamente, desligando a sirene.',
+                'D) Fazer o retorno na contramão e mudar de itinerário para não passar no vermelho.',
+                'E) Desligar os girofleds e acelerar abruptamente sobre a calçada.'
+            ],
+            resposta: 'B',
+            explicacao: 'Art. 29, VII, "d" do CTB. A prioridade não é absoluta; a transposição de sinal vermelho exige redução de velocidade e cautela.'
+        }, {
+            id: 25,
+            tipo: 'mc',
+            pergunta: 'Qual a conduta prescrita pelo CTB para os demais condutores da via quando percebem a aproximação de um veículo oficial de emergência com alarme sonoro e iluminação vermelha acionados?',
+            opcoes: [
+                'A) Acelerar para tentar ultrapassar o veículo de emergência antes do próximo cruzamento.',
+                'B) Deixar livre a passagem pela faixa da esquerda, deslocando-se para a direita e parando, se necessário.',
+                'C) Parar imediatamente no meio da faixa em que se encontram travando o tráfego totalmente.',
+                'D) Deslocar-se todos para a faixa da esquerda e buzinar insistentemente.',
+                'E) Acompanhar a viatura colado na sua traseira para aproveitar o trânsito livre.'
+            ],
+            resposta: 'B',
+            explicacao: 'Art. 29, VII, "a" do CTB. Abrir passagem pela esquerda, deslocando-se para a direita.'
+        }, {
+            id: 26,
+            tipo: 'mc',
+            pergunta: 'A infração por conduzir veículo sob a influência de álcool (art. 165) prevê medida administrativa de retenção do veículo. Caso não se apresente condutor habilitado e sóbrio no local do flagrante, o veículo será:',
+            opcoes: [
+                'A) Doado a instituições de caridade imediatamente.',
+                'B) Recolhido ao depósito fixado pelo órgão ou entidade de trânsito com circunscrição sobre a via.',
+                'C) Incinerado no local após 2 horas.',
+                'D) Entregue a qualquer pedestre que saiba dirigir, mesmo sem documento.',
+                'E) Liberado automaticamente sem condutor para rodar sozinho.'
+            ],
+            resposta: 'B',
+            explicacao: 'Art. 165 do CTB c/c medidas administrativas. Retenção e recolhimento ao depósito na falta de condutor habilitado.'
+        }, {
+            id: 27,
+            tipo: 'mc',
+            pergunta: 'Em um acidente com vítimas, o uso de torniquete por leigos sem treinamento específico é desaconselhado no atendimento pré-hospitalar básico devido ao risco de:',
+            opcoes: [
+                'A) Melhora imediata da respiração da vítima.',
+                'B) Agravamento de lesões tissulares, isquemia e amputação por aplicação incorreta e prolongada.',
+                'C) Redução natural do estresse emocional.',
+                'D) Normalização instantânea da pressão arterial sem medicação.',
+                'E) Facilitação na remoção do capacete.'
+            ],
+            resposta: 'B',
+            explicacao: 'Protocolos Internacionais de Atendimento Pré-Hospitalar (PHTLS). Uso leigo incorreto causa gangrena e amputação.'
+        }, {
+            id: 28,
+            tipo: 'mc',
+            pergunta: 'Em se tratando de passageiros transportados em veículo oficial envolvido em colisão em rodovia federal, qual deve ser o local de permanência dos mesmos após a saída do veículo desativado?',
+            opcoes: [
+                'A) Sentados no acostamento bem ao lado da pista de rolamento.',
+                'B) Fora da pista de rolamento e além do acostamento/mureta de proteção (guard-rail).',
+                'C) Dentro do veículo acidentado na faixa central da rodovia.',
+                'D) Caminhando em fila indiana sobre a faixa de trânsito no sentido dos carros.',
+                'E) Aglomerados atrás do veículo com o triângulo na mão.'
+            ],
+            resposta: 'B',
+            explicacao: 'Normas de Segurança Rodoviária. Passageiros devem aguardar além das muretas de proteção para evitar atropelamentos por terceiros.'
+        }, {
+            id: 29,
+            tipo: 'mc',
+            pergunta: 'O crime do art. 306 do CTB (embriaguez ao volante) possui pena privativa de liberdade de:',
+            opcoes: [
+                'A) Detenção, de 6 (seis) meses a 3 (três) anos, multa e suspensão ou proibição de se obter a permissão ou a habilitação.',
+                'B) Reclusão de 10 a 20 anos em regime fechado obrigatório.',
+                'C) Apenas prestação de serviços à comunidade por 15 dias.',
+                'D) Prisão simples de 1 a 5 dias sem multa.',
+                'E) Trabalho forçado em pátios do DETRAN.'
+            ],
+            resposta: 'A',
+            explicacao: 'Art. 306 do CTB estabelece pena de detenção de 6 meses a 3 anos, multa e suspensão da CNH.'
+        }, {
+            id: 30,
+            tipo: 'mc',
+            pergunta: 'Qual o órgão normativo máximo do Sistema Nacional de Trânsito responsável por expedir as Resoluções sobre fiscalização de embriaguez e sinalização de acidentes?',
+            opcoes: [
+                'A) DER (Departamento de Estradas de Rodagem).',
+                'B) CONTRAN (Conselho Nacional de Trânsito).',
+                'C) PRF (Polícia Rodoviária Federal).',
+                'D) CIRETRAN (Circunscrição Regional de Trânsito).',
+                'E) ANTT (Agência Nacional de Transportes Terrestres).'
+            ],
+            resposta: 'B',
+            explicacao: 'Art. 12 do CTB. O CONTRAN é o órgão máximo normativo e consultivo da União.'
+        }];
+
+        // ============================================================
+        //  RENDERIZAÇÃO
+        // ============================================================
+
+        const container = document.getElementById('questoes-container');
+        const contadorAcertos = document.getElementById('contador-acertos');
+        const contadorRespondidas = document.getElementById('contador-respondidas');
+
+        let acertos = 0;
+        let respondidas = 0;
+
+        function atualizarPlacar() {
+            contadorAcertos.textContent = acertos;
+            contadorRespondidas.textContent = respondidas;
+        }
+
+        function criarQuestaoHTML(q, index) {
+            const div = document.createElement('div');
+            div.className = 'questao';
+            div.dataset.index = index;
+
+            // Enunciado
+            const enunciado = document.createElement('div');
+            enunciado.className = 'enunciado';
+            const qidSpan = document.createElement('span');
+            qidSpan.className = 'qid';
+            qidSpan.textContent = `Q${q.id}`;
+            enunciado.appendChild(qidSpan);
+            enunciado.appendChild(document.createTextNode(' ' + q.pergunta));
+            div.appendChild(enunciado);
+
+            // Opções
+            const opcoesDiv = document.createElement('div');
+            opcoesDiv.className = 'opcoes';
+
+            let opcoesArray = [];
+            if (q.tipo === 'vf') {
+                opcoesArray = [
+                    { label: 'Verdadeiro', value: 'V' },
+                    { label: 'Falso', value: 'F' }
+                ];
+            } else {
+                q.opcoes.forEach((texto, i) => {
+                    const letra = String.fromCharCode(65 + i);
+                    opcoesArray.push({ label: texto, value: letra });
+                });
+            }
+
+            const nameAttr = `questao_${index}`;
+            opcoesArray.forEach(op => {
+                const label = document.createElement('label');
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = nameAttr;
+                radio.value = op.value;
+                radio.dataset.index = index;
+                radio.dataset.correta = (op.value === q.resposta) ? 'true' : 'false';
+                label.appendChild(radio);
+                label.appendChild(document.createTextNode(' ' + op.label));
+                opcoesDiv.appendChild(label);
+            });
+
+            div.appendChild(opcoesDiv);
+
+            // Botão verificar
+            const btn = document.createElement('button');
+            btn.className = 'btn-verificar';
+            btn.textContent = '✓ Verificar';
+            btn.dataset.index = index;
+            div.appendChild(btn);
+
+            // Feedback
+            const feedback = document.createElement('div');
+            feedback.className = 'feedback';
+            feedback.dataset.index = index;
+            div.appendChild(feedback);
+
+            // Evento do botão
+            btn.addEventListener('click', function(e) {
+                const idx = parseInt(this.dataset.index);
+                const questao = questoesData[idx];
+                const radios = document.querySelectorAll(`input[name="questao_${idx}"]`);
+                let selecionado = null;
+                radios.forEach(r => {
+                    if (r.checked) selecionado = r;
+                });
+
+                const feedbackDiv = document.querySelector(`.feedback[data-index="${idx}"]`);
+                const questaoDiv = document.querySelector(`.questao[data-index="${idx}"]`);
+
+                if (!selecionado) {
+                    feedbackDiv.className = 'feedback mostrar erro';
+                    feedbackDiv.innerHTML = `
+                        <div class="linha-superior">
+                            <span class="icone">⚠️</span>
+                            Selecione uma opção antes de verificar.
+                        </div>
+                    `;
+                    return;
+                }
+
+                const respostaUsuario = selecionado.value;
+                const respostaCorreta = questao.resposta;
+                const acertou = (respostaUsuario === respostaCorreta);
+
+                // Desabilita todos os radios desta questão
+                radios.forEach(r => r.disabled = true);
+                this.disabled = true;
+
+                // Atualiza contadores
+                if (!questaoDiv.dataset.verificado) {
+                    questaoDiv.dataset.verificado = 'true';
+                    respondidas++;
+                    if (acertou) acertos++;
+                    atualizarPlacar();
+                }
+
+                // Estiliza a questão
+                questaoDiv.classList.remove('correta', 'errada');
+                if (acertou) {
+                    questaoDiv.classList.add('correta');
+                } else {
+                    questaoDiv.classList.add('errada');
+                }
+
+                // Monta feedback
+                let icone = '';
+                let classe = '';
+                let linhaSuperior = '';
+                let explicacaoHtml = '';
+
+                const corretaStr = (questao.tipo === 'vf') ?
+                    (respostaCorreta === 'V' ? 'Verdadeiro' : 'Falso') :
+                    `Alternativa ${respostaCorreta}`;
+
+                if (acertou) {
+                    icone = '✅';
+                    classe = 'acerto';
+                    linhaSuperior = `<span class="icone">${icone}</span> Resposta correta!`;
+                } else {
+                    icone = '❌';
+                    classe = 'erro';
+                    linhaSuperior = `<span class="icone">${icone}</span> Resposta errada. A correta é <span class="resposta-correta">${corretaStr}</span>.`;
+                    explicacaoHtml = `<div class="explicacao"><strong>💡 Explicação:</strong> ${questao.explicacao}</div>`;
+                }
+
+                feedbackDiv.className = `feedback mostrar ${classe}`;
+                feedbackDiv.innerHTML = `
+                    <div class="linha-superior">${linhaSuperior}</div>
+                    ${explicacaoHtml}
+                `;
+
+                // Marca a opção correta com um indicador visual (opcional)
+                radios.forEach(r => {
+                    if (r.value === respostaCorreta) {
+                        r.parentElement.style.fontWeight = 'bold';
+                        r.parentElement.style.color = '#2e7d32';
+                    }
+                    if (r.checked && !acertou) {
+                        r.parentElement.style.color = '#c62828';
+                    }
+                });
+            });
+
+            return div;
+        }
+
+        // Renderiza todas as questões
+        questoesData.forEach((q, index) => {
+            const qDiv = criarQuestaoHTML(q, index);
+            container.appendChild(qDiv);
+        });
+
+        // Inicializa placar
+        atualizarPlacar();
+    </script>
+</body>
+</html>
